@@ -3,7 +3,7 @@ import os
 import requests
 import datetime
 
-from data_containers import Teacher, Notice, Message
+from .data_containers import Teacher, Notice, Message
 
 
 def prepare_header(token):
