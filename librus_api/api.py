@@ -2,6 +2,7 @@ import os
 
 import requests
 import datetime
+import json
 
 from .data_containers import Teacher, Notice, Message
 
@@ -20,6 +21,22 @@ def api_url(*args):
 def remove_escapes(s: str):
     return s.encode('utf-8').decode('unicode-escape')
 
+def get_token(username, password):
+
+    magic_header = {
+        "Authorization": "Basic Mjg6ODRmZGQzYTg3YjAzZDNlYTZmZmU3NzdiNThiMzMyYjE="
+    }
+
+    r = requests.post("https://api.librus.pl/OAuth/Token", headers=magic_header,
+                      data={"username": username,
+                            "password": password,
+                            "librus_long_term_token": "1",
+                            "grant_type": "password"})
+
+    if r.ok:
+        return r.json()["access_token"]
+    else:
+        return False
 
 class Librus:
 
@@ -52,6 +69,14 @@ class Librus:
             return data
         except Exception as e:
             print("Error retrieving data: \n {}".format(repr(e)))
+
+    def _debug_call(self, *args):
+        url = api_url(*args)
+        data = requests.get(url, headers=self.default_header)
+        try:
+            return data.json()
+        except json.JSONDecodeError:
+            return data
 
     def get_lucky_number(self):
         data = self.raw_call("LuckyNumbers")
