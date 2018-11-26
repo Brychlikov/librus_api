@@ -38,6 +38,15 @@ def get_token(username, password):
     else:
         return False
 
+
+class TokenExpiredException(Exception):
+    pass
+
+
+class WrongCallException(Exception):
+    pass
+
+
 class Librus:
 
     def __init__(self, token):
@@ -62,13 +71,17 @@ class Librus:
 
     def raw_call(self, *args):
         url = api_url(*args)
-        try:
-            data = requests.get(url, headers=self.default_header).json()
-            if data.get("Status") == "Error":
-                raise Exception("wrong API call")
-            return data
-        except Exception as e:
-            print("Error retrieving data: \n {}".format(repr(e)))
+        r = requests.get(url, headers=self.default_header)
+        if not r.ok:
+            if r.status_code == 403:
+                raise TokenExpiredException()
+            else:
+                raise Exception(f"Unknown error. code: {r.status_code} response: {r.content}")
+        else:
+            data = r.json()
+        if data.get("Status") == "Error":
+            raise WrongCallException("wrong API call")
+        return data
 
     def _debug_call(self, *args):
         url = api_url(*args)
